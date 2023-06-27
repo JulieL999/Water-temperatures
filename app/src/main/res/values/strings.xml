@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">Water temperatures</string>
+    <string name="app_desc">Do you like swimming and sunbathing? We too!
+    Because of that we have decided to create this app! In Carintia you have plenty of possibilities to go for swimming!
+    The blue water of lakes, breathtaking outlooks, sunshine and a lot of positive emotions
+    are waiting for you on the beach! I love it so much, that I often start to swim in May!
+    But sometimes it is really cold in this time and so it would be great to have a look at
+    water temperatures! Searching for it in the Internet is not really comfortable. So it\'s great to have an app for it.
+    Do you feel it sometimes that you are bored to go to Strandbad every time?
+    If yes, then it\'s not a problem, because with a help of our app you can find
+    all the places, that are close to you and also check water temperature for them!
+    So, enjoy our app and we are happy, if you like it!</string>
+
+    <string name="title_activity_maps">Water Temperatures</string>
+    <string name="maps_api_key">AIzaSyChrOpWAx-gp8Nlgij3o2tBKwo-FSpYRL8</string>
+
+    <string-array name="lakes">
+        <item>Worthersee</item>
+        <item>Faaker See</item>
+        <item>Millstätter See</item>
+        <item>Ossiacher See</item>
+        <item>Weißensee</item>
+        <item>Pressseger See</item>
+        <item>Turner See</item>
+        <item>Klopeiner See</item>
+        <item>Feldsee</item>
+        <item>Keutschacher See</item>
+    </string-array>
+</resources>
