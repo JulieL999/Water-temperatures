@@ -27,6 +27,7 @@ import android.util.Log
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.ListView
+import androidx.activity.result.contract.ActivityResultContracts
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -52,6 +53,18 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var listView: ListView
     private lateinit var listItem: Array<String>
+    private val requestPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ){isGranted:Boolean ->
+            if(isGranted){
+                Log.i("Permission","Granted")
+                getLocationPermission()
+                getDeviceLocation()
+            } else {
+                Log.i("Permission","Denied")
+            }
+        }
 
     // [START_EXCLUDE]
     // [START maps_marker_get_map_async]
@@ -85,24 +98,25 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
 
     // [START maps_marker_on_map_ready_add_marker]
     override fun onMapReady(map: GoogleMap) {
-      this.map = map
+        this.map = map
 
         getLocationPermission()
 
         updateLocationUI()
 
-        getDeviceLocation()
+//        getDeviceLocation()
     }
 
     private fun getLocationPermission(){
         if(ContextCompat.checkSelfPermission(this.applicationContext,
-            android.Manifest.permission.ACCESS_FINE_LOCATION)
-        == PackageManager.PERMISSION_GRANTED){
+                android.Manifest.permission.ACCESS_FINE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED){
             locationPermissionGranted = true
         } else{
-            ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
-            PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
-            )
+            requestPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+//            ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+//                PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
+//            )
         }
     }
 
@@ -137,7 +151,7 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
                 map?.isMyLocationEnabled = false
                 map?.uiSettings?.isMyLocationButtonEnabled = false
                 lastKnownLocation = null
-                getLocationPermission()
+                //getLocationPermission()
             }
         } catch (e: SecurityException) {
             Log.e("Exception: %s", e.message, e)
@@ -155,7 +169,7 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
                         if(lastKnownLocation != null){
                             map?.moveCamera(CameraUpdateFactory.newLatLngZoom(
                                 LatLng(lastKnownLocation!!.latitude,
-                                lastKnownLocation!!.longitude), DEFAULT_ZOOM.toFloat()))
+                                    lastKnownLocation!!.longitude), DEFAULT_ZOOM.toFloat()))
                         }
                     } else {
                         Log.d(TAG, "Current location is null. Using defaults")
