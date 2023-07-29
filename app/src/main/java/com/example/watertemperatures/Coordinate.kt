@@ -1,0 +1,13 @@
+package com.example.watertemperatures
+
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity
+data class Coordinate(
+    @PrimaryKey var cid: Int,
+    @ColumnInfo(name = "CoordinateName") var name: String?,
+    @ColumnInfo(name = "Latitude") var latitude: String?,
+    @ColumnInfo(name = "Longitude") var longitude: String?
+)

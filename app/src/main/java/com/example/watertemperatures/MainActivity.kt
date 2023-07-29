@@ -3,8 +3,11 @@ package com.example.watertemperatures
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import androidx.constraintlayout.motion.widget.MotionLayout
+import androidx.room.Room
+import kotlinx.coroutines.runBlocking
 
 class MainActivity : AppCompatActivity(){
 
@@ -13,6 +16,10 @@ class MainActivity : AppCompatActivity(){
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        
+        runBlocking {
+            databaseAcess()
+        }
 
         motionLayout = findViewById(R.id.motionLayout)
 
@@ -40,6 +47,21 @@ class MainActivity : AppCompatActivity(){
             startActivity(intent)
         }
 
+    }
+
+    suspend fun databaseAcess(){
+        val db = Room.databaseBuilder(applicationContext, CoordinateDatabase::class.java,"Coordinates")
+            .build()
+        val coordinateDao = db.coordinateDAO()
+
+//        coordinateDao.insertAll(
+//            Coordinate(1,"Wörthersee","46.62675465146807","14.136299099681358")
+//        )
+
+        val crd: List<Coordinate> = coordinateDao.getByIds(intArrayOf(1))
+        for(c in crd){
+            Log.d("Room","${c.cid} ${c.name} ${c.latitude} ${c.longitude}")
+        }
     }
 
 
