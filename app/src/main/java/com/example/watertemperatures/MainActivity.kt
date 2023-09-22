@@ -16,7 +16,8 @@ class MainActivity : AppCompatActivity(){
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        
+
+        //Code for acessing coordinate database
         runBlocking {
             databaseAcess()
         }
@@ -49,6 +50,7 @@ class MainActivity : AppCompatActivity(){
 
     }
 
+    // used for setting entries into database
     suspend fun databaseAcess(){
         val db = Room.databaseBuilder(applicationContext, CoordinateDatabase::class.java,"Coordinates")
             .build()

@@ -4,6 +4,8 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+
+//Entity class for location coordinates for getting/setting values
 @Entity
 data class Coordinate(
     @PrimaryKey var cid: Int,
