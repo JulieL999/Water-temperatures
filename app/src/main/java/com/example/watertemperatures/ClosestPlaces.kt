@@ -102,7 +102,7 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
     // [START maps_marker_on_map_ready_add_marker]
     override fun onMapReady(map: GoogleMap) {
         this.map = map
-
+        map.uiSettings.isZoomControlsEnabled = true
         getLocationPermission()
 
         updateLocationUI()
