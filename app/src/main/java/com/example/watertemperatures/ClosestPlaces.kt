@@ -28,6 +28,7 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.ListView
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.room.Room
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -37,6 +38,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.net.PlacesClient
+import kotlinx.coroutines.runBlocking
 
 /**
  * An activity that displays a Google map with a marker (pin) to indicate a particular location.
@@ -48,11 +50,12 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
     private var lastKnownLocation: Location? = null
     private lateinit var placesClient: PlacesClient
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+    private lateinit var db: CoordinateDatabase
+    private lateinit var coordinateDAO: CoordinateDAO
     private var locationPermissionGranted = false
     private var defaultLocation = LatLng(46.616223, 14.264396)
 
     private lateinit var listView: ListView
-    private lateinit var listItem: Array<String>
     private val requestPermissionLauncher =
         registerForActivityResult(
             ActivityResultContracts.RequestPermission()
@@ -72,12 +75,12 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
         super.onCreate(savedInstanceState)
         // Retrieve the content view that renders the map.
         setContentView(R.layout.activity_maps)
-
-
         listView=findViewById(R.id.listView)
-        listItem = resources.getStringArray(R.array.lakes)
-        val adapter: ArrayAdapter<String> = ArrayAdapter(this,android.R.layout.simple_list_item_1,listItem)
-        listView.adapter = adapter
+
+        //Fetch Database information
+        runBlocking {
+            fetchDatabase()
+        }
 
         Places.initialize(applicationContext, getString(R.string.maps_api_key))
         placesClient = Places.createClient(this)
@@ -184,6 +187,20 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
             Log.e("Exception: %s", e.message,e)
         }
     }
+
+    suspend fun fetchDatabase(){
+        db = Room.databaseBuilder(
+            applicationContext,
+            CoordinateDatabase::class.java,
+            "Coordinates"
+        ).build()
+        coordinateDAO = db.coordinateDAO()
+        val listItem: List<String> = coordinateDAO.getNames()
+        val adapter: ArrayAdapter<String> = ArrayAdapter(this,android.R.layout.simple_list_item_1,listItem)
+        listView.adapter=adapter
+    }
+
+
 
     companion object{
         private val TAG = ClosestPlaces::class.java.simpleName

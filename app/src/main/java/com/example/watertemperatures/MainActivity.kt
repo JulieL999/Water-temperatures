@@ -12,6 +12,7 @@ import kotlinx.coroutines.runBlocking
 class MainActivity : AppCompatActivity(){
 
     private lateinit var motionLayout: MotionLayout
+    private lateinit var db: CoordinateDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,12 +53,16 @@ class MainActivity : AppCompatActivity(){
 
     // used for setting entries into database
     suspend fun databaseAcess(){
-        val db = Room.databaseBuilder(applicationContext, CoordinateDatabase::class.java,"Coordinates")
+        db = Room.databaseBuilder(applicationContext, CoordinateDatabase::class.java,"Coordinates")
             .build()
         val coordinateDao = db.coordinateDAO()
 
 //        coordinateDao.insertAll(
-//            Coordinate(1,"Wörthersee","46.62675465146807","14.136299099681358")
+//            Coordinate(1,"Worthersee","46.62727831226116","14.110936543942412"),
+//            Coordinate(2,"Keutschachersee","46.58534725975028","14.159639373326728"),
+//            Coordinate(3, "Maltschacersee","46.703241956065085","14.142326232846942"),
+//            Coordinate(4,"Baßgeigensee","46.587253915810955","14.202405700047533"),
+//            Coordinate(5,"Rauschelsee","46.58469136779188","14.220967113932259")
 //        )
 
         val crd: List<Coordinate> = coordinateDao.getByIds(intArrayOf(1))
@@ -65,6 +70,7 @@ class MainActivity : AppCompatActivity(){
             Log.d("Room","${c.cid} ${c.name} ${c.latitude} ${c.longitude}")
         }
     }
+
 
 
 }
