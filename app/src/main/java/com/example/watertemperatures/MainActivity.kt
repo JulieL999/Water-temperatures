@@ -18,7 +18,6 @@ import androidx.constraintlayout.widget.ConstraintLayout
 
 class MainActivity : AppCompatActivity(){
 
-    private lateinit var motionLayout: MotionLayout
     private lateinit var db: CoordinateDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,7 +29,6 @@ class MainActivity : AppCompatActivity(){
             databaseAcess()
         }
 
-        motionLayout = findViewById(R.id.motionLayout)
 
         val btnFavPlaces = findViewById<Button>(R.id.btnFavouritePlaces)
         btnFavPlaces.setOnClickListener {
