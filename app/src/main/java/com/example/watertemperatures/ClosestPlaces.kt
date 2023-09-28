@@ -36,7 +36,10 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest
 import com.google.android.libraries.places.api.net.PlacesClient
 import kotlinx.coroutines.runBlocking
 
@@ -54,6 +57,8 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var coordinateDAO: CoordinateDAO
     private var locationPermissionGranted = false
     private var defaultLocation = LatLng(46.616223, 14.264396)
+
+    private lateinit var coordinates: List<Coordinate>
 
     private lateinit var listView: ListView
     private val requestPermissionLauncher =
@@ -102,7 +107,9 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
     // [START maps_marker_on_map_ready_add_marker]
     override fun onMapReady(map: GoogleMap) {
         this.map = map
+        addMarkers(map)
         map.uiSettings.isZoomControlsEnabled = true
+        map.uiSettings.isZoomGesturesEnabled = true
         getLocationPermission()
 
         updateLocationUI()
@@ -198,13 +205,34 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
         val listItem: List<String> = coordinateDAO.getNames()
         val adapter: ArrayAdapter<String> = ArrayAdapter(this,android.R.layout.simple_list_item_1,listItem)
         listView.adapter=adapter
+
+        coordinates = coordinateDAO.getAll()
     }
 
+    private fun addMarkers(googleMap: GoogleMap){
+        coordinates.forEach{place ->
+            val marker = googleMap.addMarker(
+                MarkerOptions()
+                    .title(place.name)
+                    .position(LatLng(place.latitude!!.toDouble(),place.longitude!!.toDouble()))
+            )
+        }
+    }
+//NOT DONE. FINISH.
+    private fun searchSwimming(){
+        val placeFields: List<Place.Field> = listOf(Place.Field.NAME)
 
+        val request: FindCurrentPlaceRequest = FindCurrentPlaceRequest.newInstance(placeFields)
+
+        if(ContextCompat.checkSelfPermission(this,android.Manifest.permission.ACCESS_FINE_LOCATION)==
+            PackageManager.PERMISSION_GRANTED){
+                val placeResponse = placesClient.findCurrentPlace(request)
+        }
+    }
 
     companion object{
         private val TAG = ClosestPlaces::class.java.simpleName
-        private const val DEFAULT_ZOOM = 15
+        private const val DEFAULT_ZOOM = 10
         private const val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1
 
         private const val KEY_CAMERA_POSITION = "camera position"
