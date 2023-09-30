@@ -16,12 +16,15 @@ import android.widget.PopupWindow
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody
 import org.json.JSONObject
 
 class FavPlaces : AppCompatActivity() {
@@ -99,16 +102,18 @@ class FavPlaces : AppCompatActivity() {
         val request = Request.Builder()
             .url(url)
             .addHeader(
-                "apikey",
-                "fdyRHqGggkm6gI4nM4LX6M89sobGS63N"
+                "Authorization",
+                "9ddde4f8-5fbb-11ee-a654-0242ac130002-9ddde55c-5fbb-11ee-a654-0242ac130002"
             )
             .get()
             .build()
 
-        val response = client.newCall(request).execute()
+        val responseBody = client.newCall(request).execute().body
+        var gsonString = responseBody!!.string()
 
-        Log.i("RESPONSE", response.toString())
-        return response.toString()
+
+        Log.i("RESPONSE", gsonString)
+        return gsonString
     }
 
     fun getActualWaterTemperatures(url: String) {
@@ -116,13 +121,11 @@ class FavPlaces : AppCompatActivity() {
         scope.launch {
             // Execute some code asynchronously
             withContext(Dispatchers.IO) {
-                val resp: String? = makeAPICall(url)
+                val resp = makeAPICall(url)
 
-
-
-                       if (resp != null) {
-                    Log.i("RESP", resp)
-                    val parsedObject = JSONObject(resp)
+                if (resp != null) {
+                    Log.i("RESP", resp.toString())
+                    val parsedObject = resp
                     //val temperature = parsedObject.getJSONObject("data").get("waterTemperature").toString()
                     //Log.i("TEMP", )
                 } else {
