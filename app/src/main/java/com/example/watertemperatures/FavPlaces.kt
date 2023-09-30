@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -15,7 +16,12 @@ import android.widget.PopupWindow
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.json.JSONObject
 
 class FavPlaces : AppCompatActivity() {
@@ -24,31 +30,18 @@ class FavPlaces : AppCompatActivity() {
         setContentView(R.layout.activity_fav_places)
 
         // fetch temperature from API!
-
-        /*
-            val lat = 58.7984
-            val lng = 17.8081
-            val params = "windSpeed"
-            val apiKey = "example-api-key"
-
-            val url = "https://api.stormglass.io/v2/weather/point?lat=$lat&lng=$lng&params=$params"
-
-            val headers = mapOf("Authorization" to apiKey)
-
-        //val ipAddress = get(url = "http://httpbin.org/ip").jsonObject.getString("origin")
-
-        //val response = get(url, headers = headers)
-
-            if (response.statusCode == 200) {
-                val jsonData = JSONObject(response.text)
-                // Do something with the JSON data
-            } else {
-                // Handle the error
-                println("Error: ${response.statusCode} - ${response.text}")
-            }
-
-         */
-
+        // https://api.tomorrow.io/v4/weather/forecast?location=42.3478,-71.0466&apikey=fdyRHqGggkm6gI4nM4LX6M89sobGS63N'
+        // https://api.stormglass.io/v2/weather/point?lat=${lat}&lng=${lng}&params=${params}
+        val lat = 46.62013661540484
+        val lng = 14.25296765628263
+        val params = "waterTemperature"
+        val queryParams = mapOf("lat" to lat.toString(), "lng" to lng.toString(), "params" to params)
+        var url: String = buildUrl(
+            "https://api.stormglass.io",
+            "/v2/weather/point",
+            queryParams
+        )
+        getActualWaterTemperatures("https://api.stormglass.io/v2/weather/point?lat=58.7984&lng=17.8081&params=waveHeight,waterTemperature")
 
         // --------------------------
 
@@ -99,9 +92,67 @@ class FavPlaces : AppCompatActivity() {
             }
         }
 
+    }
+
+    suspend fun makeAPICall(url: String): String? {
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url(url)
+            .addHeader(
+                "apikey",
+                "fdyRHqGggkm6gI4nM4LX6M89sobGS63N"
+            )
+            .get()
+            .build()
+
+        val response = client.newCall(request).execute()
+
+        Log.i("RESPONSE", response.toString())
+        return response.toString()
+    }
+
+    fun getActualWaterTemperatures(url: String) {
+        val scope = CoroutineScope(Dispatchers.Default)
+        scope.launch {
+            // Execute some code asynchronously
+            withContext(Dispatchers.IO) {
+                val resp: String? = makeAPICall(url)
 
 
 
+                       if (resp != null) {
+                    Log.i("RESP", resp)
+                    val parsedObject = JSONObject(resp)
+                    //val temperature = parsedObject.getJSONObject("data").get("waterTemperature").toString()
+                    //Log.i("TEMP", )
+                } else {
+                    Log.i("Response", "null :(")
+                }
 
+
+            }
+        }
+
+    }
+
+    fun buildUrl(baseUrl: String, path: String, queryParams: Map<String, String>): String {
+        val urlBuilder = StringBuilder(baseUrl)
+
+        // Append the path to the URL
+        if (!path.startsWith("/")) {
+            urlBuilder.append("/")
+        }
+        urlBuilder.append(path)
+
+        // Append query parameters to the URL
+        if (queryParams.isNotEmpty()) {
+            urlBuilder.append("?")
+            queryParams.forEach { (key, value) ->
+                urlBuilder.append(key).append("=").append(value).append("&")
+            }
+            urlBuilder.deleteCharAt(urlBuilder.length - 1)
+        }
+
+        return urlBuilder.toString()
     }
 }
