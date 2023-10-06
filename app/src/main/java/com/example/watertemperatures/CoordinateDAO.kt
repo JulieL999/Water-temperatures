@@ -10,7 +10,7 @@ import androidx.room.Query
 // and persist changes back to database
 @Dao
 interface CoordinateDAO {
-    @Query("SELECT*FROM coordinate")
+    @Query("SELECT * FROM coordinate")
     suspend fun getAll(): List<Coordinate>
 
     @Query("SELECT * FROM coordinate WHERE cid IN (:coordinateIds)")
