@@ -3,6 +3,7 @@ package com.example.watertemperatures
 import CustomAdapter
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.os.Build
@@ -36,12 +37,20 @@ import java.time.Instant
 import java.util.Locale
 
 class FavPlaces : AppCompatActivity() {
+    // TODO: put back button
     private lateinit var db: CoordinateDatabase
     private lateinit var coordinateDAO: CoordinateDAO
+    //TODO: check if the temperature is actual
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_fav_places)
+
+        val closeBtn = findViewById<Button>(R.id.closeBtn)
+        closeBtn.setOnClickListener {
+            intent = Intent(applicationContext, MainActivity::class.java)
+            startActivity(intent)
+        }
 
         // getting the recyclerview by its id
         val recyclerview = findViewById<RecyclerView>(R.id.recyclerview)
