@@ -41,7 +41,15 @@ import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest
 import com.google.android.libraries.places.api.net.PlacesClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttp
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
 
 /**
  * An activity that displays a Google map with a marker (pin) to indicate a particular location.
@@ -180,6 +188,7 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
                             map?.moveCamera(CameraUpdateFactory.newLatLngZoom(
                                 LatLng(lastKnownLocation!!.latitude,
                                     lastKnownLocation!!.longitude), DEFAULT_ZOOM.toFloat()))
+                            getNearbyPlaces()
                         }
                     } else {
                         Log.d(TAG, "Current location is null. Using defaults")
@@ -218,17 +227,31 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
             )
         }
     }
-//NOT DONE. FINISH.
-    private fun searchSwimming(){
-        val placeFields: List<Place.Field> = listOf(Place.Field.NAME)
 
-        val request: FindCurrentPlaceRequest = FindCurrentPlaceRequest.newInstance(placeFields)
-
-        if(ContextCompat.checkSelfPermission(this,android.Manifest.permission.ACCESS_FINE_LOCATION)==
-            PackageManager.PERMISSION_GRANTED){
-                val placeResponse = placesClient.findCurrentPlace(request)
+    fun getNearbyPlaces(){
+        val scope = CoroutineScope(Dispatchers.Default)
+        scope.launch {
+            withContext(Dispatchers.IO){
+                makeApiCall()
+            }
         }
     }
+
+    fun makeApiCall(){
+
+        val key = getString(R.string.maps_api_key)
+        val request = Request.Builder().url("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lastKnownLocation!!.latitude},${lastKnownLocation!!.longitude}&radius=3000&language=en&keyword=lake&key=${key}")
+            .build()
+
+        val response = OkHttpClient().newCall(request).execute().body!!.string()
+        val jsonObject = JSONObject(response)
+        logApiCall(jsonObject)
+    }
+
+    fun logApiCall(jsonObject: JSONObject){
+        Log.i("MyTag",jsonObject.toString())
+        }
+
 
     companion object{
         private val TAG = ClosestPlaces::class.java.simpleName
