@@ -240,7 +240,8 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
     fun makeApiCall(){
 
         val key = getString(R.string.maps_api_key)
-        val request = Request.Builder().url("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lastKnownLocation!!.latitude},${lastKnownLocation!!.longitude}&radius=3000&language=en&keyword=lake&key=${key}")
+        val radius = 5000
+        val request = Request.Builder().url("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lastKnownLocation!!.latitude},${lastKnownLocation!!.longitude}&radius=${radius}&language=en&keyword=lake&key=${key}")
             .build()
 
         val response = OkHttpClient().newCall(request).execute().body!!.string()
@@ -249,7 +250,17 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
     }
 
     fun logApiCall(jsonObject: JSONObject){
-        Log.i("MyTag",jsonObject.toString())
+        val results = jsonObject.getJSONArray("results")
+
+        for(i in 0 until results.length()){
+            val place = results.getJSONObject(i)
+            val name = place.get("name")
+            val location = place.getJSONObject("geometry").getJSONObject("location")
+            val lat = location.get("lat")
+            val lng = location.get("lng")
+            Log.i("MyTag","Name: $name lat: $lat lng: $lng")
+        }
+
         }
 
 
