@@ -272,7 +272,7 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
             val location = place.getJSONObject("geometry").getJSONObject("location")
             val lat = location.get("lat")
             val lng = location.get("lng")
-            val coordinate = Coordinate(abs((0..999999999).random()), name.toString(),lat.toString(),lng.toString())
+            val coordinate = Coordinate(abs((0..999999999).random()), name.toString(),lat.toString(),lng.toString(),0.0)
             list.add(coordinate)
             names.add(name.toString())
             Log.i("MyTag","Name: $name lat: $lat lng: $lng")
