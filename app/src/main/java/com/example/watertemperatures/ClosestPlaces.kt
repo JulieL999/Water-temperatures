@@ -17,18 +17,13 @@ package com.example.watertemperatures
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.location.Location
 import android.os.PersistableBundle
 import android.util.Log
-import android.widget.ArrayAdapter
-import android.widget.Button
 import android.widget.ListView
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.room.Room
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -38,18 +33,21 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.libraries.places.api.Places
-import com.google.android.libraries.places.api.model.Place
-import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest
 import com.google.android.libraries.places.api.net.PlacesClient
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import okhttp3.OkHttp
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 import org.json.JSONObject
+import java.io.IOException
+import java.lang.Math.abs
 
 /**
  * An activity that displays a Google map with a marker (pin) to indicate a particular location.
@@ -67,6 +65,10 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
     private var defaultLocation = LatLng(46.616223, 14.264396)
 
     private lateinit var coordinates: List<Coordinate>
+    private lateinit var json: JSONObject
+    val coroutineExceptionHandler = CoroutineExceptionHandler{_, throwable ->
+        throwable.printStackTrace()
+    }
 
     private lateinit var listView: ListView
     private val requestPermissionLauncher =
@@ -91,9 +93,9 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
         listView=findViewById(R.id.listView)
 
         //Fetch Database information
-        runBlocking {
-            fetchDatabase()
-        }
+//        runBlocking {
+//            fetchDatabase()
+//        }
 
         Places.initialize(applicationContext, getString(R.string.maps_api_key))
         placesClient = Places.createClient(this)
@@ -115,7 +117,6 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
     // [START maps_marker_on_map_ready_add_marker]
     override fun onMapReady(map: GoogleMap) {
         this.map = map
-        addMarkers(map)
         map.uiSettings.isZoomControlsEnabled = true
         map.uiSettings.isZoomGesturesEnabled = true
         getLocationPermission()
@@ -204,22 +205,10 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    suspend fun fetchDatabase(){
-        db = Room.databaseBuilder(
-            applicationContext,
-            CoordinateDatabase::class.java,
-            "Coordinates"
-        ).build()
-        coordinateDAO = db.coordinateDAO()
-        val listItem: List<String> = coordinateDAO.getNames()
-        val adapter: ArrayAdapter<String> = ArrayAdapter(this,android.R.layout.simple_list_item_1,listItem)
-        listView.adapter=adapter
 
-        coordinates = coordinateDAO.getAll()
-    }
 
-    private fun addMarkers(googleMap: GoogleMap){
-        coordinates.forEach{place ->
+    private fun addMarkers(googleMap: GoogleMap, list: List<Coordinate>){
+        list.forEach{place ->
             val marker = googleMap.addMarker(
                 MarkerOptions()
                     .title(place.name)
@@ -228,29 +217,54 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    fun getNearbyPlaces(){
+  private  fun getNearbyPlaces(){
         val scope = CoroutineScope(Dispatchers.Default)
         scope.launch {
-            withContext(Dispatchers.IO){
-                makeApiCall()
+            withContext(Dispatchers.IO+ coroutineExceptionHandler){
+               makeApiCall { json ->
+                   if(json == null){
+                       Log.e("MyTag","Request is null!")
+                   } else {
+                       setCoordinates(json)
+                   }
+               }
             }
         }
     }
 
-    fun makeApiCall(){
+    private fun makeApiCall(callback: (JSONObject?) -> Unit): JSONObject {
 
         val key = getString(R.string.maps_api_key)
-        val radius = 5000
-        val request = Request.Builder().url("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lastKnownLocation!!.latitude},${lastKnownLocation!!.longitude}&radius=${radius}&language=en&keyword=lake&key=${key}")
+        val radius = 50000
+        val request = Request.Builder()
+            .url("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lastKnownLocation!!.latitude},${lastKnownLocation!!.longitude}&radius=${radius}&language=en&keyword=lake&key=${key}")
             .build()
 
+        val client = OkHttpClient()
         val response = OkHttpClient().newCall(request).execute().body!!.string()
-        val jsonObject = JSONObject(response)
-        logApiCall(jsonObject)
+
+        client.newCall(request).enqueue(object : Callback{
+            override fun onFailure(call: Call, e: IOException) {
+                call.cancel()
+                callback(null)
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                val jResponse = response.body?.string()
+                callback(JSONObject(jResponse))
+            }
+        })
+
+        return JSONObject(response)
+
+
+
     }
 
-    fun logApiCall(jsonObject: JSONObject){
+   private fun setCoordinates(jsonObject: JSONObject){
         val results = jsonObject.getJSONArray("results")
+       val list = mutableListOf<Coordinate>()
+       val names = mutableListOf<String>()
 
         for(i in 0 until results.length()){
             val place = results.getJSONObject(i)
@@ -258,8 +272,17 @@ class ClosestPlaces : AppCompatActivity(), OnMapReadyCallback {
             val location = place.getJSONObject("geometry").getJSONObject("location")
             val lat = location.get("lat")
             val lng = location.get("lng")
+            val coordinate = Coordinate(abs((0..999999999).random()), name.toString(),lat.toString(),lng.toString())
+            list.add(coordinate)
+            names.add(name.toString())
             Log.i("MyTag","Name: $name lat: $lat lng: $lng")
         }
+       runOnUiThread{
+           addMarkers(map!!,list)
+       }
+
+//       val adapter: ArrayAdapter<String> = ArrayAdapter(this,android.R.layout.simple_list_item_1,names)
+//       listView.adapter=adapter
 
         }
 
