@@ -21,7 +21,7 @@
 
 
     <EditText
-        android:id="@+id/editTextTextPersonName"
+        android:id="@+id/inputField"
         android:layout_marginTop="20dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -50,13 +50,21 @@
         tools:layout="@layout/support_simple_spinner_dropdown_item" />
 
     <TextView
-        android:id="@+id/textView"
-        android:gravity="center"
+        android:id="@+id/temperature"
         android:layout_marginTop="20dp"
         android:textSize="32sp"
         android:textColor="@color/black"
         android:fontFamily="@font/acme"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Temperature: 25 °C" />
+        android:text="Temperature: " />
+    <TextView
+        android:id="@+id/locality"
+        android:layout_marginTop="5dp"
+        android:textSize="32sp"
+        android:textColor="@color/black"
+        android:fontFamily="@font/acme"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Locality: " />
 </LinearLayout>
